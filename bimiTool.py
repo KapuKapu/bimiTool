@@ -493,7 +493,7 @@ class BiMiTool:
 
 if __name__ == "__main__":
     # Initialize logger
-    logging.basicConfig(level=logging.ERROR,\
+    logging.basicConfig(level=logging.DEBUG,\
                         format='%(asctime)s [%(levelname)8s] Module %(name)s in line %(lineno)s %(funcName)s(): %(message)s',\
                         datefmt='%Y-%m-%d %H:%M:%S')
     BimiConfig.load()

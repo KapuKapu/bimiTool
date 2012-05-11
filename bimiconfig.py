@@ -32,12 +32,13 @@ class BimiConfig:
     _config_file_path = os.path.expanduser(os.path.join("~",".config","bimiTool","bmt_config.yaml"))
 
     # Initialize default configuration
+    #_config_dict = {'db_path': os.path.join(os.path.dirname(_config_file_path),"bmt_db.sqlite"),\
     script_dir = os.path.realpath(os.path.dirname(sys.argv[0]))
     _config_dict = {'db_path': os.path.join(script_dir,'bmt_db.sqlite'),\
                     'gui_path' : os.path.join(script_dir,'bmt.glade'),\
                     'mail_path' : os.path.join(script_dir,'mail.txt'),\
                     'currency' : '€'.decode('utf-8'),
-                    'log_level' : logging.ERROR}
+                    'log_level' : logging.INFO}
 
 
     ## Returns a copy of _config_dict.
