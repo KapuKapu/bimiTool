@@ -1,0 +1,11 @@
+Guten Tag werter Flur,
+die aktuelle Abrechnung der Getränkeliste zeigt folgende Kontostände:
+
+    $accInfos:$name $balance
+
+des Weiteren präsentiere ich für jede Getränkeklasse die Königinnen und Könige:
+
+    $kings:$drink-King ist $name mit $amount Flaschen
+
+Auf ein munteres Weiterzechen!
+Euer BiMi

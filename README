@@ -1,0 +1,37 @@
+BimiTool  1.0
+=============
+
+This program is designed for people who manage the beverages in
+a dormitory or flat-sharing community. It is assumed that
+inhabiters use a paper sheet to record how many drinks they had.
+For the time beeing there is no web-interface or client available.
+
+
+Features
+--------
+* add/delete/edit accounts and drinks
+* add/delete transactions, ie. consume drinks and add credit/debit
+* generate mail text with account and balance listing
+
+
+Dependencies
+------------
+* Python (tested with version 2.6, 2.7)
+* Python GTK+3 bindings ( >=gir1.2-gtk-3.0 )
+* Python SQLite3 bindings (pysqlite2)
+
+
+Installing
+----------
+BimiTool can be started without installing by simply running bimiTool.py
+
+
+Removing
+--------
+Delete the folder containing the BimiTool.
+
+
+About
+-----
+* Authors: Check the copyright notices in each source file
+* License: GNU General Public License Version 3
