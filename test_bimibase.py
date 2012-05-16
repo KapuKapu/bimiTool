@@ -219,7 +219,7 @@ class TestBimiBase(unittest.TestCase):
         self.bb.delDrink(1)
 
         self.cur.execute("SELECT * FROM drinks WHERE did=1")
-        self.assertEqual( [(1, "Fanta", 100, 85, 15, 5, 15, True, True)], self.cur.fetchall() )
+        self.assertEqual( [(1, "Fanta", 100, 85, 15, 5, 15, True, False)], self.cur.fetchall() )
 
 
     def test_undoTransactions(self):
