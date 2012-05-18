@@ -338,7 +338,7 @@ class BiMiTool:
 
                 accnames_balances = []
                 for aid, name in self.db.accounts():
-                    balance = sum(map( lambda x: x[2]*x[3], self.db.transactions(aid) )) / 100.0
+                    balance = sum(map( lambda x: x[2]*x[3], self.db.transactions(aid) )) / 100.0 - BimiConfig.option('deposit')
                     accnames_balances.append( (name, balance) )
 
                 # Check if there are accounts in DB
@@ -430,9 +430,10 @@ class BiMiTool:
         if (event.button == 3):
             self.event_pos = (event.x,event.y)
             if widget.get_path_at_pos(event.x,event.y) is not None:
-                diff = int(str(self.transactions_view.get_path_at_pos(event.x, event.y)[0]))
-                diff -= len(self.transactions_list)
-                if diff < -1: # Check if the last item "Balance" was clicked
+                #diff = int(str(self.transactions_view.get_path_at_pos(event.x, event.y)[0]))
+                #diff -= len(self.transactions_list)
+                row_num = self.transactions_view.get_path_at_pos(event.x, event.y)[0]
+                if self.transactions_list[(row_num,0)][0] != -1: # Check if a transaction was clicked
                     self.gui.get_object('transactions_menu_delete').set_sensitive(True)
                     self.transactions_context_menu.popup(None, None, None, None, event.button, event.time)
 
@@ -488,7 +489,8 @@ class BiMiTool:
                 total += item[3]/100.0*item[2]
             tid_date_value[2] = str(tid_date_value[2]) + cur_symbol
             self.transactions_list.append(tid_date_value)
-            self.transactions_list.append( [-1, 'Balance', str(total) + cur_symbol] )
+            self.transactions_list.append( [-1, 'Deposit', str(-BimiConfig.option('deposit')) + cur_symbol] )
+            self.transactions_list.append( [-1, 'Balance', str(total - BimiConfig.option('deposit')) + cur_symbol] )
 
 
 if __name__ == "__main__":

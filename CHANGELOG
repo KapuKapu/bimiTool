@@ -1,5 +1,5 @@
 This log documents changes between stable versions.
 
 $date: Version $version
-* Increased maximum number of full/empty bottles from 100 to 10^6
-* Fixed: Setting spinbuttons to value 4,6 results in 4,59 database entry.
+* Added a deposit value for all accounts which gets substracted from the balance.
+* Fixed: Deleted drinks showed up in the kings list.
