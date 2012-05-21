@@ -16,7 +16,7 @@
 #    You should have received a copy of the GNU General Public License        #
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.    #
 # ----------------------------------------------------------------------------#
-import sys, datetime, logging
+import sys, datetime, logging, argparse
 from bimibase import BimiBase
 from bimiconfig import BimiConfig
 
@@ -494,10 +494,35 @@ class BiMiTool:
 
 
 if __name__ == "__main__":
+    # Parse arguments
+    parser = argparse.ArgumentParser(add_help=True, description='This program helps managing beverage consumation in dormitories')
+    parser.add_argument('-d',
+                        action='store_true',
+                        default=False,
+                        dest='debug',
+                        help="Show debuging messages")
+    parser.add_argument('--config',
+                        default=None,
+                        help="Path to an alternate config file",
+                        type=str)
+    parser.add_argument('--database',
+                        default=None,
+                        help="Path to an alternate sqlite data-base file",
+                        type=str)
+    options = parser.parse_args()
+
     # Initialize logger
-    logging.basicConfig(level=logging.DEBUG,\
-                        format='%(asctime)s [%(levelname)8s] Module %(name)s in line %(lineno)s %(funcName)s(): %(message)s',\
+    log_lvl = logging.ERROR
+    if options.debug:
+        log_lvl = logging.DEBUG
+    logging.basicConfig(level=log_lvl,
+                        format='%(asctime)s [%(levelname)8s] Module %(name)s in line %(lineno)s %(funcName)s(): %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
-    BimiConfig.load()
+
+    # Setup config
+    BimiConfig.load(options.config)
+    if options.database is not None:
+        BimiConfig.setOption('db_path', options.database)
+
     bmt = BiMiTool()
     Gtk.main()
