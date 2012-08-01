@@ -31,6 +31,20 @@ except ImportError:
 
 class BiMiTool:
     def __init__(self):
+        self.account_window = None            ##< The most recent popup window to add/edit accounts
+        self.drink_window = None              ##< The most recent popup window to add/edit drinks
+        self.mail_window = None               ##< The most recent popup window to get the mail text
+        self.edit_acc_infos = []              ##< Stores [account_id, name] while edit_account window is open
+        self.edit_drink_infos = []            ##< Stores row from drinks_list while edit_drink window is open
+        self.event_pos = []                   ##< [x,y] pos from event object that activated the last context menu popup
+        self.transactions = []                ##< Contains all informations and transactions from one account
+        self.drinks_comboxes_spinbuttons = [] ##< Contains tuples (combobox,spinbutton)
+        self.transactions_list = Gtk.ListStore(int, str, str)
+        self.accounts_list = Gtk.ListStore(int, str)
+        ## \var self.drinks_list for each float a str for visualisation
+        # (did, dname, sPrice, str sPrice, pPrice, str pPrice, deposit, str deposit, fBottles, eBottles, kings, str for comboboxes)
+        self.drinks_list = Gtk.ListStore(int, str, float, str, float, str, float, str, int, int, bool, str)
+
         self._logger = logging.getLogger('BiMiTool')
 
         # Create DataBase-object
@@ -73,17 +87,8 @@ class BiMiTool:
         self.accounts_context_menu = self.gui.get_object('accounts_menu')
         self.drinks_context_menu = self.gui.get_object('drinks_menu')
         self.transactions_context_menu = self.gui.get_object('transactions_menu')
-        self.account_window = None  ##< The most recent popup window to add/edit accounts
-        self.drink_window = None    ##< The most recent popup window to add/edit drinks
-        self.mail_window = None     ##< The most recent popup window to get the mail text
-
-        # Misc member variables
-        self.edit_acc_infos = []    ##< Stores [account_id, name] while edit_account window is open
-        self.edit_drink_infos = []  ##< Stores row from drinks_list while edit_drink window is open
-        self.event_pos = []         ##< [x,y] pos from event object that activated the last context menu popup
 
         # Create column-headers and add accounts from database into rows
-        self.accounts_list = Gtk.ListStore(int, str)
         self.accounts_view = self.gui.get_object("accounts_view")
         self.accounts_view.set_model(self.accounts_list)
         self.accounts_name_col = Gtk.TreeViewColumn('Account name', Gtk.CellRendererText(), text=1)
@@ -91,9 +96,6 @@ class BiMiTool:
         self.updateAccountsView()
 
         # Create column headers for drinks_view
-        ## \var self.drinks_list for each float a str for visualisation
-        # (did, dname, sPrice, str sPrice, pPrice, str pPrice, deposit, str deposit, fBottles, eBottles, kings, str for comboboxes)
-        self.drinks_list = Gtk.ListStore(int, str, float, str, float, str, float, str, int, int, bool, str)
         self.drinks_view = self.gui.get_object("drinks_view")
         self.drinks_view.set_model(self.drinks_list)
         col_names = ['Name', 'Sales Price', 'Purchase Price', 'Deposit', 'Full Bottles', 'Empty Bottles', 'Kings']
@@ -106,8 +108,6 @@ class BiMiTool:
         self.updateDrinksView()
 
         # Create column headers for transactions_view
-        self.transactions = [] ##< Contains all informations and transactions from one account
-        self.transactions_list = Gtk.ListStore(int, str, str)
         self.transactions_view = self.gui.get_object('transactions_view')
         self.transactions_view.set_model(self.transactions_list)
         col_names = ['Date', 'Value']
@@ -118,7 +118,6 @@ class BiMiTool:
             self.transactions_view.append_column(trans_view_col)
 
         # Set up and add text from database to comboboxes and spinbuttons
-        self.drinks_comboxes_spinbuttons = [] ##< Contains tuples (combobox,spinbutton)
         for i in range(4):
             cbox = self.gui.get_object('drinks_select' + str(i))
             cbox.set_model(self.drinks_list)
@@ -126,6 +125,9 @@ class BiMiTool:
             cbox.pack_start(cell, True)
             cbox.add_attribute(cell, 'text', 11)
             self.drinks_comboxes_spinbuttons.append( (cbox, self.gui.get_object('drinks_amount' + str(i))) )
+        #TODO: test expanding grid and adding cbox and spinbutton
+        #grid = self.gui.get_object('drinks_grid')
+
         self.updateDrinksComboBoxes()
 
 
