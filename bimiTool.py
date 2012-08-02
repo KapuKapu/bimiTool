@@ -16,7 +16,7 @@
 #    You should have received a copy of the GNU General Public License        #
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.    #
 # ----------------------------------------------------------------------------#
-import sys, datetime, logging
+import sys, datetime, logging, argparse
 from bimibase import BimiBase
 from bimiconfig import BimiConfig
 
@@ -31,6 +31,20 @@ except ImportError:
 
 class BiMiTool:
     def __init__(self):
+        self.account_window = None            ##< The most recent popup window to add/edit accounts
+        self.drink_window = None              ##< The most recent popup window to add/edit drinks
+        self.mail_window = None               ##< The most recent popup window to get the mail text
+        self.edit_acc_infos = []              ##< Stores [account_id, name] while edit_account window is open
+        self.edit_drink_infos = []            ##< Stores row from drinks_list while edit_drink window is open
+        self.event_pos = []                   ##< [x,y] pos from event object that activated the last context menu popup
+        self.transactions = []                ##< Contains all informations and transactions from one account
+        self.drinks_comboxes_spinbuttons = [] ##< Contains tuples (combobox,spinbutton)
+        self.transactions_list = Gtk.ListStore(int, str, str)
+        self.accounts_list = Gtk.ListStore(int, str)
+        ## \var self.drinks_list for each float a str for visualisation
+        # (did, dname, sPrice, str sPrice, pPrice, str pPrice, deposit, str deposit, fBottles, eBottles, kings, str for comboboxes)
+        self.drinks_list = Gtk.ListStore(int, str, float, str, float, str, float, str, int, int, bool, str)
+
         self._logger = logging.getLogger('BiMiTool')
 
         # Create DataBase-object
@@ -48,6 +62,7 @@ class BiMiTool:
                    'add_account': self.popAddAccWindow,
                    'edit_account': self.popEditAccWindow,
                    'acc_view_button_pressed': self.accountsViewClicked,
+                   'tab_switched': self.tabSwitched,
 
                    'delete_account': self.deleteAccount,
                    'acc_view_row_act': self.updateTransactionsView,
@@ -69,21 +84,11 @@ class BiMiTool:
             self._logger.critical('Autoconnection of widgets failed! Check if %s exists.', BimiConfig.option('gui_path'))
             sys.exit(1)
         self.main_window = self.gui.get_object('main_window')
-        self.main_window.show_all()
         self.accounts_context_menu = self.gui.get_object('accounts_menu')
         self.drinks_context_menu = self.gui.get_object('drinks_menu')
         self.transactions_context_menu = self.gui.get_object('transactions_menu')
-        self.account_window = None  ##< The most recent popup window to add/edit accounts
-        self.drink_window = None    ##< The most recent popup window to add/edit drinks
-        self.mail_window = None     ##< The most recent popup window to get the mail text
-
-        # Misc member variables
-        self.edit_acc_infos = []    ##< Stores [account_id, name] while edit_account window is open
-        self.edit_drink_infos = []  ##< Stores row from drinks_list while edit_drink window is open
-        self.event_pos = []         ##< [x,y] pos from event object that activated the last context menu popup
 
         # Create column-headers and add accounts from database into rows
-        self.accounts_list = Gtk.ListStore(int, str)
         self.accounts_view = self.gui.get_object("accounts_view")
         self.accounts_view.set_model(self.accounts_list)
         self.accounts_name_col = Gtk.TreeViewColumn('Account name', Gtk.CellRendererText(), text=1)
@@ -91,9 +96,6 @@ class BiMiTool:
         self.updateAccountsView()
 
         # Create column headers for drinks_view
-        ## \var self.drinks_list for each float a str for visualisation
-        # (did, dname, sPrice, str sPrice, pPrice, str pPrice, deposit, str deposit, fBottles, eBottles, kings, str for comboboxes)
-        self.drinks_list = Gtk.ListStore(int, str, float, str, float, str, float, str, int, int, bool, str)
         self.drinks_view = self.gui.get_object("drinks_view")
         self.drinks_view.set_model(self.drinks_list)
         col_names = ['Name', 'Sales Price', 'Purchase Price', 'Deposit', 'Full Bottles', 'Empty Bottles', 'Kings']
@@ -103,11 +105,8 @@ class BiMiTool:
             renderer.set_alignment(1.0,0.5)
             drinks_view_col = Gtk.TreeViewColumn(col_names[i], renderer, text=render_cols[i])
             self.drinks_view.append_column(drinks_view_col)
-        self.updateDrinksView()
 
         # Create column headers for transactions_view
-        self.transactions = [] ##< Contains all informations and transactions from one account
-        self.transactions_list = Gtk.ListStore(int, str, str)
         self.transactions_view = self.gui.get_object('transactions_view')
         self.transactions_view.set_model(self.transactions_list)
         col_names = ['Date', 'Value']
@@ -118,15 +117,30 @@ class BiMiTool:
             self.transactions_view.append_column(trans_view_col)
 
         # Set up and add text from database to comboboxes and spinbuttons
-        self.drinks_comboxes_spinbuttons = [] ##< Contains tuples (combobox,spinbutton)
-        for i in range(4):
-            cbox = self.gui.get_object('drinks_select' + str(i))
-            cbox.set_model(self.drinks_list)
+        grid = self.gui.get_object('drinks_grid')
+        num = BimiConfig.option('num_comboboxes')
+        for i in range(num):
+            cbox = Gtk.ComboBox.new_with_model(self.drinks_list)
+            cbox.set_hexpand(True)
             cell = Gtk.CellRendererText()
             cbox.pack_start(cell, True)
             cbox.add_attribute(cell, 'text', 11)
-            self.drinks_comboxes_spinbuttons.append( (cbox, self.gui.get_object('drinks_amount' + str(i))) )
-        self.updateDrinksComboBoxes()
+
+            adjustment = Gtk.Adjustment(0, 0, 999, 1, 10, 0)
+            spinbutton = Gtk.SpinButton()
+            spinbutton.set_adjustment(adjustment)
+            spinbutton.set_numeric(True)
+            spinbutton.set_alignment(1.0)
+            self.drinks_comboxes_spinbuttons.append( (cbox, spinbutton) )
+
+            grid.attach(cbox, 0, i, 1, 1)
+            grid.attach(spinbutton, 1, i, 1, 1)
+
+        grid.child_set_property(self.gui.get_object('consume_button'), 'top-attach', num+1)
+        grid.child_set_property(self.gui.get_object('scrolledwindow1'), 'top-attach', num+2)
+        self.updateDrinksList()
+
+        self.main_window.show_all()
 
 
     ## Called if mouse button is pressed in self.accounts_view
@@ -235,8 +249,7 @@ class BiMiTool:
     def deleteDrink(self, widget):
         row_num = self.drinks_view.get_path_at_pos(self.event_pos[0], self.event_pos[1])[0]
         self.db.delDrink( self.drinks_list[(row_num,0)][0] )
-        self.updateDrinksView()
-        self.updateDrinksComboBoxes()
+        self.updateDrinksList()
 
 
     def undoTransaction(self, widget):
@@ -281,8 +294,7 @@ class BiMiTool:
         else:
             self.db.addDrink(values)
         self.drink_window.destroy()
-        self.updateDrinksView()
-        self.updateDrinksComboBoxes()
+        self.updateDrinksList()
 
 
     ## Generates mail text from mail file and database
@@ -338,7 +350,7 @@ class BiMiTool:
 
                 accnames_balances = []
                 for aid, name in self.db.accounts():
-                    balance = sum(map( lambda x: x[2]*x[3], self.db.transactions(aid) )) / 100.0
+                    balance = sum(map( lambda x: x[2]*x[3], self.db.transactions(aid) )) / 100.0 - BimiConfig.option('deposit')
                     accnames_balances.append( (name, balance) )
 
                 # Check if there are accounts in DB
@@ -426,13 +438,19 @@ class BiMiTool:
         self.drink_window.show()
 
 
+    def tabSwitched(self, widget, tab_child, activated_tab):
+        if activated_tab == 1:
+            self.updateDrinksList()
+
+
     def transactionsViewClicked(self, widget, event):
         if (event.button == 3):
             self.event_pos = (event.x,event.y)
             if widget.get_path_at_pos(event.x,event.y) is not None:
-                diff = int(str(self.transactions_view.get_path_at_pos(event.x, event.y)[0]))
-                diff -= len(self.transactions_list)
-                if diff < -1: # Check if the last item "Balance" was clicked
+                #diff = int(str(self.transactions_view.get_path_at_pos(event.x, event.y)[0]))
+                #diff -= len(self.transactions_list)
+                row_num = self.transactions_view.get_path_at_pos(event.x, event.y)[0]
+                if self.transactions_list[(row_num,0)][0] != -1: # Check if a transaction was clicked
                     self.gui.get_object('transactions_menu_delete').set_sensitive(True)
                     self.transactions_context_menu.popup(None, None, None, None, event.button, event.time)
 
@@ -452,7 +470,9 @@ class BiMiTool:
                 self.drinks_comboxes_spinbuttons[i][0].set_active(i)
 
 
-    def updateDrinksView(self):
+    # Loads drink infos from database into drinks_list and updates
+    # widget dependent on drinks_list.
+    def updateDrinksList(self):
         self.drinks_list.clear()
         cur_symbol = BimiConfig.option('currency')
         for item in self.db.drinks():
@@ -462,6 +482,7 @@ class BiMiTool:
                                       item[4]/100.0, str(item[4]/100.0) + cur_symbol,\
                                       item[5], item[6], item[7],\
                                       item[1] + ' @ ' + str(item[2]/100.0) + cur_symbol] )
+        self.updateDrinksComboBoxes()
 
 
     def updateTransactionsView(self, widget):
@@ -488,14 +509,41 @@ class BiMiTool:
                 total += item[3]/100.0*item[2]
             tid_date_value[2] = str(tid_date_value[2]) + cur_symbol
             self.transactions_list.append(tid_date_value)
-            self.transactions_list.append( [-1, 'Balance', str(total) + cur_symbol] )
+            if 0.009 < BimiConfig.option('deposit'):
+                self.transactions_list.append( [-1, 'Deposit', str(-BimiConfig.option('deposit')) + cur_symbol] )
+            self.transactions_list.append( [-1, 'Balance', str(total - BimiConfig.option('deposit')) + cur_symbol] )
 
 
 if __name__ == "__main__":
+    # Parse arguments
+    parser = argparse.ArgumentParser(add_help=True, description='This program helps managing beverage consumation in dormitories')
+    parser.add_argument('-d',
+                        action='store_true',
+                        default=False,
+                        dest='debug',
+                        help="Show debuging messages")
+    parser.add_argument('--config',
+                        default=None,
+                        help="Path to an alternate config file",
+                        type=str)
+    parser.add_argument('--database',
+                        default=None,
+                        help="Path to an alternate sqlite data-base file",
+                        type=str)
+    options = parser.parse_args()
+
     # Initialize logger
-    logging.basicConfig(level=logging.ERROR,\
-                        format='%(asctime)s [%(levelname)8s] Module %(name)s in line %(lineno)s %(funcName)s(): %(message)s',\
+    log_lvl = logging.ERROR
+    if options.debug:
+        log_lvl = logging.DEBUG
+    logging.basicConfig(level=log_lvl,
+                        format='%(asctime)s [%(levelname)8s] Module %(name)s in line %(lineno)s %(funcName)s(): %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
-    BimiConfig.load()
+
+    # Setup config
+    BimiConfig.load(options.config)
+    if options.database is not None:
+        BimiConfig.setOption('db_path', options.database)
+
     bmt = BiMiTool()
     Gtk.main()

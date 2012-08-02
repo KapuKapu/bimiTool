@@ -1,0 +1,12 @@
+# BimiTool configuration file.
+# Encoding must be set to UTF8.
+
+# Set the currency symbol to be used by the gui.
+#currency: '€'
+
+# Set the deposit value. This value will be deducted from the
+# balance of each user.
+#deposit: 0.0
+
+# Set the number of comboboxes displayed in the GUI.
+#num_comboboxes: 4

@@ -41,7 +41,7 @@ except ImportError:
 #    bottles_full      number of full bottles available
 #    bottles_empty     number of empte bottles
 #    deleted           true if drink was deleted but is used in table transacts
-#    kings             ture if drink should be returned by DataBase::kings()
+#    kings             true if drink should be returned by DataBase::kings()
 #
 #  kings               stores information about how many drinks a user has consumed
 #    aid               from table accounts
@@ -231,7 +231,7 @@ class BimiBase:
     #
     #TODO: delete drink if there are no transactions attached
     def delDrink(self, drink_id):
-        self.cur.execute("UPDATE drinks SET deleted=1 WHERE did=?", [drink_id])
+        self.cur.execute("UPDATE drinks SET deleted=1, kings=0 WHERE did=?", [drink_id])
         self.dbcon.commit()
 
 
