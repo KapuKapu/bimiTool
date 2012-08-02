@@ -509,7 +509,8 @@ class BiMiTool:
                 total += item[3]/100.0*item[2]
             tid_date_value[2] = str(tid_date_value[2]) + cur_symbol
             self.transactions_list.append(tid_date_value)
-            self.transactions_list.append( [-1, 'Deposit', str(-BimiConfig.option('deposit')) + cur_symbol] )
+            if 0.009 < BimiConfig.option('deposit'):
+                self.transactions_list.append( [-1, 'Deposit', str(-BimiConfig.option('deposit')) + cur_symbol] )
             self.transactions_list.append( [-1, 'Balance', str(total - BimiConfig.option('deposit')) + cur_symbol] )
 
 
