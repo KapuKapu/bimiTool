@@ -1,10 +1,9 @@
 This log documents changes between stable versions.
 
-$date: Version $version
+$date$: Version $version$
 * Fixed: Deposit gets displayed even if it is zero.
 * Fixed: Error message if all option in the config-file are commented out.
 * Fixed: No update of drinksView on tab switch (number of consumed drinks doesn't get updated).
 * Added configurable number of comboboxes which display drinks.
 * Fixed: Deleted drinks showed up in the kings list.
 * Added a deposit value for all accounts which gets substracted from the balance.
-
