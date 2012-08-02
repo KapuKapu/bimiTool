@@ -39,7 +39,8 @@ class BimiConfig:
                             'gui_path': os.path.join(_script_dir,'bmt.glade'),
                             'mail_path': os.path.join(_script_dir,'mail.txt'),
                             'currency': '€'.decode('utf-8'),
-                            'deposit': 0.0}
+                            'deposit': 0.0,
+                            'num_comboboxes': 4}
     _config_dict = _default_config_dict
     _rm_opts = ['db_path', 'gui_path', 'mail_path'] ##< Options that will be removed before dumping the config
 
@@ -69,8 +70,8 @@ class BimiConfig:
             yaml_file = open(BimiConfig._config_file_path, 'r')
         except IOError as io:
             if conf_file_path is None:
-                BimiConfig._logger.debug('Reading file %s failed! Using default configuration. [io: %s]', BimiConfig._config_file_path, io)
-                #TODO: write config with comments
+                BimiConfig._logger.debug('No config file found. Writing one to %s', BimiConfig._config_file_path)
+                BimiConfig.writeConfig()
             else:
                 BimiConfig._logger.error('Reading file %s failed! Using default configuration. [io: %s]', BimiConfig._config_file_path, io)
             return
@@ -130,9 +131,10 @@ class BimiConfig:
         BimiConfig._config_dict[option] = deepcopy(value)
 
 
-    ## Writes _config_dict to a yaml file
+    ## Writes _config_dict to a yaml file.
     #
     #  Options specified in _rm_opts are removed before writing.
+    #  TODO: enhance this function.
     #
     @staticmethod
     def writeConfig():

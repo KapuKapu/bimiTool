@@ -83,7 +83,6 @@ class BiMiTool:
             self._logger.critical('Autoconnection of widgets failed! Check if %s exists.', BimiConfig.option('gui_path'))
             sys.exit(1)
         self.main_window = self.gui.get_object('main_window')
-        self.main_window.show_all()
         self.accounts_context_menu = self.gui.get_object('accounts_menu')
         self.drinks_context_menu = self.gui.get_object('drinks_menu')
         self.transactions_context_menu = self.gui.get_object('transactions_menu')
@@ -118,17 +117,30 @@ class BiMiTool:
             self.transactions_view.append_column(trans_view_col)
 
         # Set up and add text from database to comboboxes and spinbuttons
-        for i in range(4):
-            cbox = self.gui.get_object('drinks_select' + str(i))
-            cbox.set_model(self.drinks_list)
+        grid = self.gui.get_object('drinks_grid')
+        num = BimiConfig.option('num_comboboxes')
+        for i in range(num):
+            cbox = Gtk.ComboBox.new_with_model(self.drinks_list)
+            cbox.set_hexpand(True)
             cell = Gtk.CellRendererText()
             cbox.pack_start(cell, True)
             cbox.add_attribute(cell, 'text', 11)
-            self.drinks_comboxes_spinbuttons.append( (cbox, self.gui.get_object('drinks_amount' + str(i))) )
-        #TODO: test expanding grid and adding cbox and spinbutton
-        #grid = self.gui.get_object('drinks_grid')
 
+            adjustment = Gtk.Adjustment(0, 0, 999, 1, 10, 0)
+            spinbutton = Gtk.SpinButton()
+            spinbutton.set_adjustment(adjustment)
+            spinbutton.set_numeric(True)
+            spinbutton.set_alignment(1.0)
+            self.drinks_comboxes_spinbuttons.append( (cbox, spinbutton) )
+
+            grid.attach(cbox, 0, i, 1, 1)
+            grid.attach(spinbutton, 1, i, 1, 1)
+
+        grid.child_set_property(self.gui.get_object('consume_button'), 'top-attach', num+1)
+        grid.child_set_property(self.gui.get_object('scrolledwindow1'), 'top-attach', num+2)
         self.updateDrinksComboBoxes()
+
+        self.main_window.show_all()
 
 
     ## Called if mouse button is pressed in self.accounts_view
