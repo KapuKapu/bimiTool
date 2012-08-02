@@ -84,7 +84,11 @@ class BimiConfig:
             return
         yaml_file.close()
 
-        if type(BimiConfig._config_dict) is not dict:
+        if not BimiConfig._config_dict:
+            BimiConfig._config_dict = BimiConfig._default_config_dict
+            BimiConfig._logger.debug('No options specified in %s. Using default configuration.', BimiConfig._config_file_path)
+            return
+        elif type(BimiConfig._config_dict) is not dict:
             BimiConfig._config_dict = BimiConfig._default_config_dict
             BimiConfig._logger.error('%s is not a valid config file! Using default configuration. [yaml: No dictionary found!]', BimiConfig._config_file_path)
             return
