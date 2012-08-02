@@ -62,6 +62,7 @@ class BiMiTool:
                    'add_account': self.popAddAccWindow,
                    'edit_account': self.popEditAccWindow,
                    'acc_view_button_pressed': self.accountsViewClicked,
+                   'tab_switched': self.tabSwitched,
 
                    'delete_account': self.deleteAccount,
                    'acc_view_row_act': self.updateTransactionsView,
@@ -104,7 +105,6 @@ class BiMiTool:
             renderer.set_alignment(1.0,0.5)
             drinks_view_col = Gtk.TreeViewColumn(col_names[i], renderer, text=render_cols[i])
             self.drinks_view.append_column(drinks_view_col)
-        self.updateDrinksView()
 
         # Create column headers for transactions_view
         self.transactions_view = self.gui.get_object('transactions_view')
@@ -138,7 +138,7 @@ class BiMiTool:
 
         grid.child_set_property(self.gui.get_object('consume_button'), 'top-attach', num+1)
         grid.child_set_property(self.gui.get_object('scrolledwindow1'), 'top-attach', num+2)
-        self.updateDrinksComboBoxes()
+        self.updateDrinksList()
 
         self.main_window.show_all()
 
@@ -249,8 +249,7 @@ class BiMiTool:
     def deleteDrink(self, widget):
         row_num = self.drinks_view.get_path_at_pos(self.event_pos[0], self.event_pos[1])[0]
         self.db.delDrink( self.drinks_list[(row_num,0)][0] )
-        self.updateDrinksView()
-        self.updateDrinksComboBoxes()
+        self.updateDrinksList()
 
 
     def undoTransaction(self, widget):
@@ -295,8 +294,7 @@ class BiMiTool:
         else:
             self.db.addDrink(values)
         self.drink_window.destroy()
-        self.updateDrinksView()
-        self.updateDrinksComboBoxes()
+        self.updateDrinksList()
 
 
     ## Generates mail text from mail file and database
@@ -440,6 +438,11 @@ class BiMiTool:
         self.drink_window.show()
 
 
+    def tabSwitched(self, widget, tab_child, activated_tab):
+        if activated_tab == 1:
+            self.updateDrinksList()
+
+
     def transactionsViewClicked(self, widget, event):
         if (event.button == 3):
             self.event_pos = (event.x,event.y)
@@ -467,7 +470,9 @@ class BiMiTool:
                 self.drinks_comboxes_spinbuttons[i][0].set_active(i)
 
 
-    def updateDrinksView(self):
+    # Loads drink infos from database into drinks_list and updates
+    # widget dependent on drinks_list.
+    def updateDrinksList(self):
         self.drinks_list.clear()
         cur_symbol = BimiConfig.option('currency')
         for item in self.db.drinks():
@@ -477,6 +482,7 @@ class BiMiTool:
                                       item[4]/100.0, str(item[4]/100.0) + cur_symbol,\
                                       item[5], item[6], item[7],\
                                       item[1] + ' @ ' + str(item[2]/100.0) + cur_symbol] )
+        self.updateDrinksComboBoxes()
 
 
     def updateTransactionsView(self, widget):

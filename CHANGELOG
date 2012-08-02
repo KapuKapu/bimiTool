@@ -1,5 +1,10 @@
 This log documents changes between stable versions.
 
 $date: Version $version
-* Added a deposit value for all accounts which gets substracted from the balance.
+* Fixed: No update of drinksView on tab switch (number of consumed
+         drinks doesn't get updated).
+* Added configurable number of comboboxes which display drinks.
 * Fixed: Deleted drinks showed up in the kings list.
+* Added a deposit value for all accounts which gets substracted from
+  the balance.
+
