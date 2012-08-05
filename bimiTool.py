@@ -302,14 +302,6 @@ class BiMiTool:
     #  size_request of scrolledwindow and textview doesn't work properly,
     #  which results in a too small window. stupid gtk
     def generateMail(self, widget):
-        # Open mail file for reading
-        try:
-            mail_file = open(BimiConfig.option('mail_path'), 'r')
-        except IOError as io:
-            self._logger.error('File %s required to generate mail not found! [io: %s]',\
-                               BimiConfig.option('mail_path'), io)
-            return
-
         if self.mail_window is None:
             self.buildMailWindow()
         else:
@@ -318,7 +310,8 @@ class BiMiTool:
 
         mail_buffer = self.gui.get_object('mail_buffer')
         mail_buffer.set_text('')
-        for i,line in enumerate(mail_file):
+        mail_string = BimiConfig.option('mail_text').split('\n')
+        for i,line in enumerate(mail_string):
             # substitute $kings in file with the kings information
             if line.find('$kings:') != -1:
                 parts = list(line.partition('$kings:'))
@@ -339,7 +332,7 @@ class BiMiTool:
                         except StandardError as err:
                             self._logger.error("Line %s in file %s is not as expected! [err: %s]", str(i+1), BimiConfig.option('mail_path'), err)
                             return
-                        mail_buffer.insert_at_cursor(insert)
+                        mail_buffer.insert_at_cursor(insert + '\n')
                 else:
                     mail_buffer.insert_at_cursor( '{}The Rabble is delighted, there are no Kings and Queens!'.format(parts[0])+'\n' )
 
@@ -366,12 +359,11 @@ class BiMiTool:
                         except StandardError as err:
                             self._logger.error("'$accInfos:' line in %s file is broken! [err: %s]", BimiConfig.option('mail_path'), err)
                             return
-                        mail_buffer.insert_at_cursor(insert)
+                        mail_buffer.insert_at_cursor(insert + '\n')
                 else:
                     mail_buffer.insert_at_cursor( '{}No one lives in BimiTool-land ;_;'.format(parts[0])+'\n' )
             else:
-                mail_buffer.insert_at_cursor(line)
-        mail_file.close()
+                mail_buffer.insert_at_cursor(line + '\n')
         self.mail_window.show_all()
 
 

@@ -10,3 +10,26 @@
 
 # Set the number of comboboxes displayed in the GUI.
 #num_comboboxes: 4
+
+# Customize the text displayed in the gui-mail-window. The line containing
+# $accInfos will be replaced with the names and balances of all available
+# accounts.
+# The part after "$accInfos:" can be customized.
+#
+# $name $balance      -->  M. Bison 13.37€
+# $name has $balance! -->  M. Bison has 13.37€!
+#
+# The line containing $kings will be replaced with those account who consumed
+# the most of each drink. Customisation works the same way as $accInfos.
+#mail_text: |
+#    Guten Tag werter Flur,
+#    die aktuelle Abrechnung der Getränkeliste zeigt folgende Kontostände:
+#
+#        $accInfos:$name $balance
+#
+#    des Weiteren präsentiere ich für jede Getränkeklasse die Königinnen und Könige:
+#
+#        $kings:$drink-King ist $name mit $amount Flaschen
+#
+#    Auf ein munteres Weiterzechen!
+#    Euer BiMi

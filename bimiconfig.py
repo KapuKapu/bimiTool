@@ -40,7 +40,20 @@ class BimiConfig:
                             'mail_path': os.path.join(_script_dir,'mail.txt'),
                             'currency': '€'.decode('utf-8'),
                             'deposit': 0.0,
-                            'num_comboboxes': 4}
+                            'num_comboboxes': 4,
+                            'mail_text':\
+"""Guten Tag werter Flur,
+die aktuelle Abrechnung der Getränkeliste zeigt folgende Kontostände:
+
+    $accInfos:$name $balance
+
+des Weiteren präsentiere ich für jede Getränkeklasse die Königinnen und Könige:
+
+    $kings:$drink-King ist $name mit $amount Flaschen
+
+Auf ein munteres Weiterzechen!
+Euer BiMi"""               }
+
     _config_dict = _default_config_dict
     _rm_opts = ['db_path', 'gui_path', 'mail_path'] ##< Options that will be removed before dumping the config
 
