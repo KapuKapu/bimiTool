@@ -509,18 +509,18 @@ class BiMiTool:
 if __name__ == "__main__":
     # Parse arguments
     parser = argparse.ArgumentParser(add_help=True, description='This program helps managing beverage consumation in dormitories')
-    parser.add_argument('-d',
+    parser.add_argument('-d','--debug',
                         action='store_true',
                         default=False,
                         dest='debug',
-                        help="Show debuging messages")
+                        help="display debugging messages")
     parser.add_argument('--config',
                         default=None,
-                        help="Path to an alternate config file",
+                        help="specify path to a config file",
                         type=str)
     parser.add_argument('--database',
                         default=None,
-                        help="Path to an alternate sqlite data-base file",
+                        help="specify path to a sqlite data-base file",
                         type=str)
     options = parser.parse_args()
 

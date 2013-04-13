@@ -289,7 +289,14 @@ class TestBimiBase(unittest.TestCase):
         # Populated DB test
         self.populateDatabase()
 
-        self.assertEqual( [("Noob", "Fanta", 10)], self.bb.kings() )
+        # Testcase: Same drink name but different dids
+        self.bb.addDrink(["MultiDrink",4,0,0,0,0,True])
+        self.bb.addDrink(["MultiDrink",5,0,0,0,0,True])
+        self.bb.consumeDrinks(2, [(4,4), (5,5)])
+
+        expected_result = [("Max Mustermann", "MultiDrink", 9),
+                           ("Noob", "Fanta", 10)]
+        self.assertEqual( expected_result, self.bb.kings() )
 
 
     def test_transactions(self):

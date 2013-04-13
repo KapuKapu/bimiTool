@@ -21,7 +21,8 @@ from datetime import date
 
 git_rm_files = ["test_bimibase.py",
                 "run_unittest.py",
-                "make_release.py"]
+                "make_release.py",
+                "session.vim"]
 
 version_subs_files = ["CHANGELOG",
                       "README"]

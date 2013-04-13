@@ -249,22 +249,24 @@ class BimiBase:
 
     ## Returns those who have consumed the most for each drink
     #
-    #  \return \b List of ntuples (accounts.name, drinks.name, king.qaffed)
-    #             for every drink with drinks.kings=True and quaffed = MAX(quaffed)
+    #  For every relevant drink name and username calculate the amount
+    #  and keep only the user with MAX(quaffed)
+    #
+    #  \return \b List of ntuples (accounts.name, drinks.name, quaffed) for every
+    #             drink with drinks.kings=True and quaffed = MAX(quaffed)ordered
+    #             ascending by accounts.name
     #
     def kings(self):
-        kings_list = []
-        self.cur.execute("SELECT did FROM drinks WHERE kings=1")
-        for item in self.cur.fetchall():
-            # Selects (accounts.name, drinks.name, king.qaffed) for every item and quaffed = MAX(quaffed)
-            self.cur.execute("SELECT k.name, d.name, k.quaffed FROM \
-                                (SELECT accounts.name, k.did, k.quaffed FROM \
-                                    (SELECT * FROM kings WHERE quaffed in \
-                                        (SELECT MAX(quaffed) FROM kings WHERE did=?)) AS k \
-                                    JOIN accounts on accounts.aid=k.aid) AS k \
-                                JOIN drinks AS d ON k.did=d.did", item)
-            kings_list.append(self.cur.fetchone())
-        return filter(lambda x: x, kings_list)
+        self.cur.execute("SELECT name, dname, MAX(total)\
+                          FROM (SELECT k.aid, d.name AS dname, SUM(k.quaffed) AS total\
+                                FROM kings AS k\
+                                JOIN drinks AS d ON k.did=d.did\
+                                WHERE d.name IN (SELECT DISTINCT name FROM drinks WHERE kings=1 AND deleted=0)\
+                                GROUP BY k.aid, d.name) AS b\
+                          JOIN accounts AS a ON b.aid=a.aid\
+                          GROUP BY dname\
+                          ORDER BY name ASC")
+        return self.cur.fetchall()
 
 
     ## Sets the name from account_id to name
