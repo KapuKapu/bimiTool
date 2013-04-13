@@ -204,7 +204,10 @@ class BimiBase:
         # update transacts and drinks tables
         for k,v in drink_infos.iteritems():
             self.cur.execute("INSERT INTO transacts VALUES(?,?,?,?,?,?)", [new_tid, account_id, k, v[0], -v[1], datetime.datetime.now()])
-            self.cur.execute("UPDATE drinks SET bottles_full=?,bottles_empty=? WHERE did=?", [v[2]-v[0], v[3]+v[0], k])
+            if v[2]-v[0] < 0:
+                self.cur.execute("UPDATE drinks SET bottles_full=?,bottles_empty=? WHERE did=?", [0, v[3]+v[0], k])
+            else:
+                self.cur.execute("UPDATE drinks SET bottles_full=?,bottles_empty=? WHERE did=?", [v[2]-v[0], v[3]+v[0], k])
         self.dbcon.commit()
 
         # update kings table
@@ -257,15 +260,15 @@ class BimiBase:
     #             ascending by accounts.name
     #
     def kings(self):
-        self.cur.execute("SELECT name, dname, MAX(total)\
-                          FROM (SELECT k.aid, d.name AS dname, SUM(k.quaffed) AS total\
-                                FROM kings AS k\
-                                JOIN drinks AS d ON k.did=d.did\
-                                WHERE d.name IN (SELECT DISTINCT name FROM drinks WHERE kings=1 AND deleted=0)\
-                                GROUP BY k.aid, d.name) AS b\
-                          JOIN accounts AS a ON b.aid=a.aid\
-                          GROUP BY dname\
-                          ORDER BY name ASC")
+        self.cur.execute('''SELECT name, dname, MAX(total)
+                            FROM (SELECT k.aid, d.name AS dname, SUM(k.quaffed) AS total
+                                  FROM kings AS k
+                                  JOIN drinks AS d ON k.did=d.did
+                                  WHERE d.name IN (SELECT DISTINCT name FROM drinks WHERE kings=1 AND deleted=0)
+                                  GROUP BY k.aid, d.name) AS b
+                            JOIN accounts AS a ON b.aid=a.aid
+                            GROUP BY dname
+                            ORDER BY name ASC''')
         return self.cur.fetchall()
 
 

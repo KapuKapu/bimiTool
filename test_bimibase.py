@@ -183,8 +183,8 @@ class TestBimiBase(unittest.TestCase):
         self.bb.consumeDrinks(2, [(1,10), (2,20), (2,30)])
 
         self.cur.execute("SELECT * FROM drinks WHERE did in (1,2) ORDER BY did ASC")
-        self.assertEqual( [(1, "Fanta", 100, 85, 15, -5, 25, False, True),\
-                           (2, "Cola", 100, 85, 15, -27, 52, False, False)],\
+        self.assertEqual( [(1, "Fanta", 100, 85, 15, 0, 25, False, True),\
+                           (2, "Cola", 100, 85, 15, 0, 52, False, False)],\
                           self.cur.fetchall() )
 
         self.cur.execute("SELECT * FROM kings WHERE aid=2")
