@@ -16,7 +16,8 @@
 #    You should have received a copy of the GNU General Public License        #
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.    #
 # ----------------------------------------------------------------------------#
-import sys, datetime, logging, argparse
+import sys, datetime, logging, argparse, subprocess
+from urllib import quote
 from bimibase import BimiBase
 from bimiconfig import BimiConfig
 
@@ -75,7 +76,7 @@ class BiMiTool:
                    'add_drink': self.popAddDrinkWindow,
                    'edit_drink': self.popEditDrinkWindow,
 
-                   'generate_mail': self.generateMail,
+                   'generate_mail': self.showSummaryMail,
                    #"preferences_activate": self.prefsPopup,
                    'main_window_destroyed': Gtk.main_quit,
                    'quit_activate' : Gtk.main_quit}
@@ -178,9 +179,11 @@ class BiMiTool:
                 self.db.setAccountName(self.edit_acc_infos[0], acc_name)
             if credit != 0:
                 self.db.addCredit(self.edit_acc_infos[0],credit)
+                self.showCreditMail(acc_name, credit/100.0)
         else:
             self.db.addAccount(acc_name, credit)
         self.updateAccountsView()
+        #TODO: reselect account after adding credit or select account after adding it
         self.account_window.destroy()
 
 
@@ -297,28 +300,27 @@ class BiMiTool:
         self.updateDrinksList()
 
 
-    ## Generates mail text from mail file and database
+    ## Generates mail text from credit_mail option and database
     #
-    #  size_request of scrolledwindow and textview doesn't work properly,
-    #  which results in a too small window. stupid gtk
-    def generateMail(self, widget):
-        # Open mail file for reading
-        try:
-            mail_file = open(BimiConfig.option('mail_path'), 'r')
-        except IOError as io:
-            self._logger.error('File %s required to generate mail not found! [io: %s]',\
-                               BimiConfig.option('mail_path'), io)
-            return
+    #  \param account_name \b String containing the name of the account which recived the credit
+    #  \param credit       \b Float containing the amount of added credit
+    #  \return             \b Dictionary containing the 'body' and 'subject' strings of the credit mail
+    #
+    def generateCreditMail(self, account_name, credit):
+        mail_body = BimiConfig.option('credit_mail_text').replace('$amount', str(credit) + BimiConfig.option('currency'))\
+                                                         .replace('$name', account_name)
+        mail_subj = BimiConfig.option('credit_mail_subject').replace('$amount', str(credit) + BimiConfig.option('currency'))
+        return {'body': mail_body, 'subject': mail_subj}
 
-        if self.mail_window is None:
-            self.buildMailWindow()
-        else:
-            #TODO: Raise window
-            pass
 
-        mail_buffer = self.gui.get_object('mail_buffer')
-        mail_buffer.set_text('')
-        for i,line in enumerate(mail_file):
+    ## Generates mail text from summary_mail option and database
+    #
+    #  \return \b Dictionary containing the 'body' and 'subject' strings of the summary mail
+    #
+    def generateSummaryMail(self):
+        mail_string = BimiConfig.option('summary_mail_text').split('\n')
+        mail_body = ''
+        for i,line in enumerate(mail_string):
             # substitute $kings in file with the kings information
             if line.find('$kings:') != -1:
                 parts = list(line.partition('$kings:'))
@@ -339,9 +341,9 @@ class BiMiTool:
                         except StandardError as err:
                             self._logger.error("Line %s in file %s is not as expected! [err: %s]", str(i+1), BimiConfig.option('mail_path'), err)
                             return
-                        mail_buffer.insert_at_cursor(insert)
+                        mail_body += insert + '\n'
                 else:
-                    mail_buffer.insert_at_cursor( '{}The Rabble is delighted, there are no Kings and Queens!'.format(parts[0])+'\n' )
+                    mail_body += '{}The Rabble is delighted, there are no Kings and Queens!'.format(parts[0]) + '\n'
 
             # substitute $accInfos in file with the account informations
             elif line.find('$accInfos:') != -1:
@@ -366,17 +368,50 @@ class BiMiTool:
                         except StandardError as err:
                             self._logger.error("'$accInfos:' line in %s file is broken! [err: %s]", BimiConfig.option('mail_path'), err)
                             return
-                        mail_buffer.insert_at_cursor(insert)
+                        mail_body += insert + '\n'
                 else:
-                    mail_buffer.insert_at_cursor( '{}No one lives in BimiTool-land ;_;'.format(parts[0])+'\n' )
+                    mail_body += '{}No one lives in BimiTool-land ;_;'.format(parts[0]) + '\n'
             else:
-                mail_buffer.insert_at_cursor(line)
-        mail_file.close()
-        self.mail_window.show_all()
+                mail_body += line + '\n'
+
+        return {'subject': BimiConfig.option('summary_mail_subject'), 'body': mail_body}
 
 
     def mailWindowDestroyed(self, widget, stuff=None):
         self.mail_window = None
+
+
+    ## Open mail program if option was selected
+    #
+    #  Before opening the mail program in compose mode the strings in
+    #  mailto_dict are convertet mostly according to RFC 2368. The only
+    #  difference is the character encoding with utf-8, which is not
+    #  allowed in RFC 2368 but thunderbird supports it.
+    #
+    #  \param mailto_dict \b Dictionary containing 'to', 'body' and 'subject' strings
+    #  \return            \b String containing the program name or None
+    #
+    def openMailProgram(self, mailto_dict):
+        mail_program = BimiConfig.option('mail_program')
+        # Build mailto url from dictionary
+        if mail_program is not None:
+            if 'to' in mailto_dict:
+                mailto_url = 'mailto:{}?'.format( quote(mailto_dict['to'].encode('utf-8')) )
+            else:
+                mailto_url = 'mailto:?'
+            if 'subject' in mailto_dict:
+                mailto_url+= 'subject={}&'.format( quote(mailto_dict['subject'].encode('utf-8')) )
+            if 'body' in mailto_dict:
+                mailto_url+= 'body={}'.format( quote(mailto_dict['body'].encode('utf-8')) )
+        else:
+            return mail_program
+
+        # Check which program to start
+        if mail_program == 'icedove' or  mail_program == 'thunderbird':
+            process = subprocess.Popen([mail_program, "-compose", mailto_url], stdout=subprocess.PIPE)
+            if process.communicate()[0] != '':
+                self._logger.debug("%s: %s", mail_program, process.communicate()[0])
+        return mail_program
 
 
     ## Opens account_window
@@ -438,6 +473,34 @@ class BiMiTool:
         self.drink_window.show()
 
 
+    ## Open mail program in compose mode with credit_mail data
+    #
+    #  \param account_name \b String containig the name of the account holder
+    #  \param credit       \b Float representing the amount of added credit
+    #
+    def showCreditMail(self, account_name, credit):
+        mail_dict = self.generateCreditMail(account_name, credit)
+        self.openMailProgram(mail_dict)
+
+
+    ## Show summary mail in a gtk+ window or opens mail program
+    #
+    #  size_request of scrolledwindow and textview doesn't work properly,
+    #  which results in a too small window. stupid gtk
+    #
+    def showSummaryMail(self, widget):
+        mail_dict = self.generateSummaryMail()
+        if self.openMailProgram(mail_dict) is None:
+            if self.mail_window is None:
+                self.buildMailWindow()
+            else:
+                #TODO: Raise window
+                pass
+            mail_buffer = self.gui.get_object('mail_buffer')
+            mail_buffer.set_text(mail_dict['subject'] + '\n\n' + mail_dict['body'])
+            self.mail_window.show_all()
+
+
     def tabSwitched(self, widget, tab_child, activated_tab):
         if activated_tab == 1:
             self.updateDrinksList()
@@ -447,10 +510,9 @@ class BiMiTool:
         if (event.button == 3):
             self.event_pos = (event.x,event.y)
             if widget.get_path_at_pos(event.x,event.y) is not None:
-                #diff = int(str(self.transactions_view.get_path_at_pos(event.x, event.y)[0]))
-                #diff -= len(self.transactions_list)
                 row_num = self.transactions_view.get_path_at_pos(event.x, event.y)[0]
-                if self.transactions_list[(row_num,0)][0] != -1: # Check if a transaction was clicked
+                # Check if a transaction was clicked
+                if self.transactions_list[(row_num,0)][0] != -1:
                     self.gui.get_object('transactions_menu_delete').set_sensitive(True)
                     self.transactions_context_menu.popup(None, None, None, None, event.button, event.time)
 
@@ -517,18 +579,18 @@ class BiMiTool:
 if __name__ == "__main__":
     # Parse arguments
     parser = argparse.ArgumentParser(add_help=True, description='This program helps managing beverage consumation in dormitories')
-    parser.add_argument('-d',
+    parser.add_argument('-d','--debug',
                         action='store_true',
                         default=False,
                         dest='debug',
-                        help="Show debuging messages")
+                        help="display debugging messages")
     parser.add_argument('--config',
                         default=None,
-                        help="Path to an alternate config file",
+                        help="specify path to a config file",
                         type=str)
     parser.add_argument('--database',
                         default=None,
-                        help="Path to an alternate sqlite data-base file",
+                        help="specify path to a sqlite data-base file",
                         type=str)
     options = parser.parse_args()
 

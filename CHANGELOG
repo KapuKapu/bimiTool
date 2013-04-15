@@ -1,5 +1,11 @@
 This log documents changes between stable versions.
 
+2013-04-15: Version 1.2
+* Added option to generate email when credit has been added to an account.
+* Added option to open a mailprogram with the generated text, instead of just showing it in a window.
+* Fixed: Kingslist doesn't show deleted drinks anymore and drinks with the same name get summed up.
+* Added adjustment of mail text in the config file.
+
 2012-08-02: Version 1.1
 * Fixed: Deposit gets displayed even if it is zero.
 * Fixed: Error message if all option in the config-file are commented out.
