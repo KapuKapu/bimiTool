@@ -179,6 +179,7 @@ class BiMiTool:
                 self.db.setAccountName(self.edit_acc_infos[0], acc_name)
             if credit != 0:
                 self.db.addCredit(self.edit_acc_infos[0],credit)
+                self.showCreditMail(acc_name, credit/100.0)
         else:
             self.db.addAccount(acc_name, credit)
         self.updateAccountsView()
@@ -299,9 +300,22 @@ class BiMiTool:
         self.updateDrinksList()
 
 
-    ## Generates mail text from mail file and database
+    ## Generates mail text from credit_mail option and database
     #
-    #  \return \b String containing the body of the summary mail
+    #  \param account_name \b String containing the name of the account which recived the credit
+    #  \param credit       \b Float containing the amount of added credit
+    #  \return             \b Dictionary containing the 'body' and 'subject' strings of the credit mail
+    #
+    def generateCreditMail(self, account_name, credit):
+        mail_body = BimiConfig.option('credit_mail_text').replace('$amount', str(credit) + BimiConfig.option('currency'))\
+                                                         .replace('$name', account_name)
+        mail_subj = BimiConfig.option('credit_mail_subject').replace('$amount', str(credit) + BimiConfig.option('currency'))
+        return {'body': mail_body, 'subject': mail_subj}
+
+
+    ## Generates mail text from summary_mail option and database
+    #
+    #  \return \b Dictionary containing the 'body' and 'subject' strings of the summary mail
     #
     def generateSummaryMail(self):
         mail_string = BimiConfig.option('summary_mail_text').split('\n')
@@ -360,11 +374,44 @@ class BiMiTool:
             else:
                 mail_body += line + '\n'
 
-        return mail_body
+        return {'subject': BimiConfig.option('summary_mail_subject'), 'body': mail_body}
 
 
     def mailWindowDestroyed(self, widget, stuff=None):
         self.mail_window = None
+
+
+    ## Open mail program if option was selected
+    #
+    #  Before opening the mail program in compose mode the strings in
+    #  mailto_dict are convertet mostly according to RFC 2368. The only
+    #  difference is the character encoding with utf-8, which is not
+    #  allowed in RFC 2368 but thunderbird supports it.
+    #
+    #  \param mailto_dict \b Dictionary containing 'to', 'body' and 'subject' strings
+    #  \return            \b String containing the program name or None
+    #
+    def openMailProgram(self, mailto_dict):
+        mail_program = BimiConfig.option('mail_program')
+        # Build mailto url from dictionary
+        if mail_program is not None:
+            if 'to' in mailto_dict:
+                mailto_url = 'mailto:{}?'.format( quote(mailto_dict['to'].encode('utf-8')) )
+            else:
+                mailto_url = 'mailto:?'
+            if 'subject' in mailto_dict:
+                mailto_url+= 'subject={}&'.format( quote(mailto_dict['subject'].encode('utf-8')) )
+            if 'body' in mailto_dict:
+                mailto_url+= 'body={}'.format( quote(mailto_dict['body'].encode('utf-8')) )
+        else:
+            return mail_program
+
+        # Check which program to start
+        if mail_program == 'icedove' or  mail_program == 'thunderbird':
+            process = subprocess.Popen([mail_program, "-compose", mailto_url], stdout=subprocess.PIPE)
+            if process.communicate()[0] != '':
+                self._logger.debug("%s: %s", mail_program, process.communicate()[0])
+        return mail_program
 
 
     ## Opens account_window
@@ -426,34 +473,31 @@ class BiMiTool:
         self.drink_window.show()
 
 
+    ## Open mail program in compose mode with credit_mail data
+    #
+    #  \param account_name \b String containig the name of the account holder
+    #  \param credit       \b Float representing the amount of added credit
+    #
+    def showCreditMail(self, account_name, credit):
+        mail_dict = self.generateCreditMail(account_name, credit)
+        self.openMailProgram(mail_dict)
+
+
     ## Show summary mail in a gtk+ window or opens mail program
     #
     #  size_request of scrolledwindow and textview doesn't work properly,
     #  which results in a too small window. stupid gtk
     #
     def showSummaryMail(self, widget):
-        # Open mail program if option was selected
-        mail_program = BimiConfig.option('mail_program')
-        mail_body = self.generateSummaryMail()
-        if mail_program is not None:
-            # Build mailto url, RFC 2368 says _no_ 8-bit characters but thunderbird supports utf-8
-            mailto_url = 'mailto:?'
-            mailto_url+= 'subject=' + quote(BimiConfig.option('summary_mail_subject').encode('utf-8')) + '&'
-            mailto_url+= 'body=' + quote(mail_body.encode('utf-8'))
-
-            if mail_program == 'icedove' or  mail_program == 'thunderbird':
-                process = subprocess.Popen([mail_program, "-compose", mailto_url], stdout=subprocess.PIPE)
-                if process.communicate()[0] != '':
-                    self._logger.debug("%s: %s", mail_program, process.communicate()[0])
-        # Display mail-window
-        else:
+        mail_dict = self.generateSummaryMail()
+        if self.openMailProgram(mail_dict) is None:
             if self.mail_window is None:
                 self.buildMailWindow()
             else:
                 #TODO: Raise window
                 pass
             mail_buffer = self.gui.get_object('mail_buffer')
-            mail_buffer.set_text(BimiConfig.option('summary_mail_subject') + '\n\n' + mail_body)
+            mail_buffer.set_text(mail_dict['subject'] + '\n\n' + mail_dict['body'])
             self.mail_window.show_all()
 
 

@@ -123,7 +123,7 @@ set softtabstop=4
 set suffixes=.bak,~,.swp,.o,.info,.aux,.log,.dvi,.bbl,.blg,.brf,.cb,.ind,.idx,.ilg,.inx,.out,.toc
 set tabstop=4
 set tags=./tags,./TAGS,tags,TAGS,~/.vim/tags/qt4,~/.vim/tags/stl
-set textwidth=66
+set textwidth=999
 set wildignore=*.pyc
 set wildmenu
 let s:so_save = &so | let s:siso_save = &siso | set so=0 siso=0
@@ -137,17 +137,23 @@ set shortmess=aoO
 badd +1 bimiTool.py
 badd +260 bimibase.py
 badd +187 test_bimibase.py
-badd +0 CHANGELOG
-badd +0 make_release.py
-badd +0 bimiconfig.py
-badd +0 bmt_config.yaml
+badd +1 CHANGELOG
+badd +1 make_release.py
+badd +1 bimiconfig.py
+badd +1 bmt_config.yaml
 args bimiTool.py bimibase.py
 edit bimiTool.py
 set splitbelow splitright
+wincmd _ | wincmd |
+vsplit
+1wincmd h
+wincmd w
 set nosplitbelow
 set nosplitright
 wincmd t
 set winheight=1 winwidth=1
+exe 'vert 1resize ' . ((&columns * 159 + 159) / 319)
+exe 'vert 2resize ' . ((&columns * 159 + 159) / 319)
 argglobal
 setlocal keymap=
 setlocal noarabic
@@ -244,7 +250,7 @@ setlocal syntax=python
 endif
 setlocal tabstop=4
 setlocal tags=
-setlocal textwidth=0
+setlocal textwidth=999
 setlocal thesaurus=
 setlocal noundofile
 setlocal nowinfixheight
@@ -253,12 +259,128 @@ set nowrap
 setlocal nowrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 20 - ((19 * winheight(0) + 42) / 85)
+let s:l = 405 - ((44 * winheight(0) + 42) / 85)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-20
-normal! 023l
+405
+normal! 087l
+wincmd w
+argglobal
+edit bimiTool.py
+setlocal keymap=
+setlocal noarabic
+setlocal autoindent
+setlocal balloonexpr=
+setlocal nobinary
+setlocal bufhidden=
+setlocal buflisted
+setlocal buftype=
+setlocal cindent
+setlocal cinkeys=0{,0},0),:,!^F,o,O,e
+setlocal cinoptions=}4
+setlocal cinwords=if,else,while,do,for,switch
+setlocal colorcolumn=
+setlocal comments=s1:/*,mb:*,ex:*/,://,b:#,:XCOMM,n:>,fb:-
+setlocal commentstring=#%s
+setlocal complete=.,w,b,u,t,i
+setlocal concealcursor=
+setlocal conceallevel=0
+setlocal completefunc=
+setlocal nocopyindent
+setlocal cryptmethod=
+setlocal nocursorbind
+setlocal nocursorcolumn
+set cursorline
+setlocal cursorline
+setlocal define=
+setlocal dictionary=
+setlocal nodiff
+setlocal equalprg=
+setlocal errorformat=
+setlocal expandtab
+if &filetype != 'python'
+setlocal filetype=python
+endif
+setlocal foldcolumn=0
+setlocal foldenable
+setlocal foldexpr=0
+setlocal foldignore=#
+setlocal foldlevel=0
+setlocal foldmarker={{{,}}}
+setlocal foldmethod=manual
+setlocal foldminlines=1
+setlocal foldnestmax=20
+setlocal foldtext=foldtext()
+setlocal formatexpr=
+setlocal formatoptions=tcq
+setlocal formatlistpat=^\\s*\\d\\+[\\]:.)}\\t\ ]\\s*
+setlocal grepprg=
+setlocal iminsert=2
+setlocal imsearch=2
+setlocal include=^\\s*\\(from\\|import\\)
+setlocal includeexpr=substitute(v:fname,'\\.','/','g')
+setlocal indentexpr=GetPythonIndent(v:lnum)
+setlocal indentkeys=0{,0},:,!^F,o,O,e,<:>,=elif,=except
+setlocal noinfercase
+setlocal iskeyword=@,48-57,_,192-255
+setlocal keywordprg=pydoc
+setlocal nolinebreak
+setlocal nolisp
+setlocal nolist
+setlocal makeprg=
+setlocal matchpairs=(:),{:},[:]
+setlocal modeline
+setlocal modifiable
+setlocal nrformats=octal,hex
+set number
+setlocal number
+setlocal numberwidth=4
+setlocal omnifunc=pythoncomplete#Complete
+setlocal path=
+setlocal nopreserveindent
+setlocal nopreviewwindow
+setlocal quoteescape=\\
+setlocal noreadonly
+setlocal norelativenumber
+setlocal norightleft
+setlocal rightleftcmd=search
+setlocal noscrollbind
+setlocal shiftwidth=4
+setlocal noshortname
+setlocal nosmartindent
+setlocal softtabstop=4
+setlocal nospell
+setlocal spellcapcheck=[.?!]\\_[\\])'\"\	\ ]\\+
+setlocal spellfile=
+setlocal spelllang=en
+setlocal statusline=
+setlocal suffixesadd=.py
+setlocal swapfile
+setlocal synmaxcol=3000
+if &syntax != 'python'
+setlocal syntax=python
+endif
+setlocal tabstop=4
+setlocal tags=
+setlocal textwidth=999
+setlocal thesaurus=
+setlocal noundofile
+setlocal nowinfixheight
+setlocal nowinfixwidth
+set nowrap
+setlocal nowrap
+setlocal wrapmargin=0
+silent! normal! zE
+let s:l = 324 - ((20 * winheight(0) + 42) / 85)
+if s:l < 1 | let s:l = 1 | endif
+exe s:l
+normal! zt
+324
+normal! 057l
+wincmd w
+exe 'vert 1resize ' . ((&columns * 159 + 159) / 319)
+exe 'vert 2resize ' . ((&columns * 159 + 159) / 319)
 tabedit bimibase.py
 set splitbelow splitright
 wincmd _ | wincmd |
@@ -377,12 +499,12 @@ set nowrap
 setlocal nowrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 134 - ((64 * winheight(0) + 42) / 85)
+let s:l = 1 - ((0 * winheight(0) + 42) / 85)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-134
-normal! 08l
+1
+normal! 0
 wincmd w
 argglobal
 2argu
@@ -729,12 +851,12 @@ set nowrap
 setlocal nowrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 118 - ((64 * winheight(0) + 42) / 85)
+let s:l = 122 - ((61 * winheight(0) + 42) / 85)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-118
-normal! 065l
+122
+normal! 011l
 tabedit bmt_config.yaml
 set splitbelow splitright
 set nosplitbelow
@@ -838,7 +960,7 @@ setlocal syntax=yaml
 endif
 setlocal tabstop=4
 setlocal tags=
-setlocal textwidth=66
+setlocal textwidth=999
 setlocal thesaurus=
 setlocal noundofile
 setlocal nowinfixheight
@@ -847,12 +969,12 @@ set nowrap
 setlocal nowrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 45 - ((44 * winheight(0) + 42) / 85)
+let s:l = 46 - ((45 * winheight(0) + 42) / 85)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-45
-normal! 012l
+46
+normal! 09l
 tabedit CHANGELOG
 set splitbelow splitright
 set nosplitbelow
@@ -970,7 +1092,7 @@ if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 6
-normal! 0
+normal! 060l
 tabedit make_release.py
 set splitbelow splitright
 set nosplitbelow

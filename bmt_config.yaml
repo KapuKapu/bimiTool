@@ -8,19 +8,25 @@
 # balance of each user.
 #deposit: 0.0
 
-# Set the number of comboboxes displayed in the GUI.
+# Set the number of drink-comboboxes displayed in the GUI.
 #num_comboboxes: 4
 
-# Customize the text displayed in the gui-mail-window. The line containing
-# $accInfos will be replaced with the names and balances of all available
-# accounts.
-# The part after "$accInfos:" can be customized.
+# Instead of displaying the mail text in the gui, a mail program can
+# be launched with the mail data as parameter. Supported programs
+# are thunderbird and icedove.
+#mail_program: icedove
+
+# Customize the text displayed in the gui-mail-window. The line
+# containing $accInfos will be replaced with the names and balances
+# of all available accounts.  The part after "$accInfos:" can be
+# customized.
 #
 # $name $balance      -->  M. Bison 13.37€
 # $name has $balance! -->  M. Bison has 13.37€!
 #
-# The line containing $kings will be replaced with those account who consumed
-# the most of each drink. Customisation works the same way as $accInfos.
+# The line containing $kings will be replaced with those account who
+# consumed the most of each drink. Customisation works the same way
+# as $accInfos.
 summary_mail_subject: Getränkeabrechnung
 summary_mail_text: |
     Guten Tag werter Flur,
@@ -35,18 +41,17 @@ summary_mail_text: |
     Auf ein munteres Weiterzechen!
     Euer BiMi
 
-# Instead of displaying the mail text in the gui, a mail program
-# can be launched with the mail data as parameter. Supported
-# programs are thunderbird and icedove.
-#mail_program: icedove
-
 # If credits have been added to an account a mail can be sent to
-# confirm the transaction. The mail_program option must be
-# activated to use this feature.
+# confirm the transaction. The mail_program option must be activated
+# to use this feature! Two substitution will occur in subject and
+# text.
+# $amount  --> float value of added credit
+# $name    --> account name
 credit_mail_subject: Getränkekonto +$amount
 credit_mail_text: |
-    Hoi,
-    hiermit ist bestätigt dass $amount auf dein Getränkekonto eingezahlt wurde.
+    Hoi $name,
+    hiermit ist bestätigt dass $amount auf dein Getränkekonto
+    eingezahlt wurde.
 
     Auf ein munteres Weiterzechen!
     Dein BiMi
