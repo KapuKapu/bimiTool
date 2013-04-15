@@ -1,8 +1,6 @@
 This log documents changes between stable versions.
 
-$date$: Version $version$
-TODO: nachdem einem account geld hinzugefügt worden ist, sollte der account angezeigt werden
-TODO: BimiConfig --> Config, verallgemeinern indem default config usw. von ausserhalb gesetzt wird.
+2013-04-15: Version 1.2
 * Added option to generate email when credit has been added to an account.
 * Added option to open a mailprogram with the generated text, instead of just showing it in a window.
 * Fixed: Kingslist doesn't show deleted drinks anymore and drinks with the same name get summed up.

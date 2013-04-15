@@ -1,10 +1,10 @@
-BimiTool  $version$
+BimiTool  1.2
 ===================
 
-This program is designed for people who manage the beverages in
-a dormitory or flat-sharing community. It is assumed that
-inhabiters use a paper sheet to record how many drinks they had.
-For the time beeing there is no web-interface or client available.
+This program is designed for people who manage the beverages in a
+dormitory or flat-sharing community. It is assumed that inhabiters
+use tally marks to record how many drinks they had.  For the time
+beeing there is no web-interface or client available.
 
 
 Features
@@ -23,7 +23,8 @@ Dependencies
 
 Installing
 ----------
-BimiTool can be started without installing by simply running bimiTool.py
+BimiTool can be started without installing by simply running
+bimiTool.py
 
 
 Removing
