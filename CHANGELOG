@@ -3,6 +3,7 @@ This log documents changes between stable versions.
 $date$: Version $version$
 TODO: nachdem einem account geld hinzugefügt worden ist, sollte der account angezeigt werden
 TODO: BimiConfig --> Config, verallgemeinern indem default config usw. von ausserhalb gesetzt wird.
+* Added option to open a mailprogram with the generated text, instead of just showing it in a window.
 * Kingslist doesn't show deleted drinks anymore and drinks with the same name get summed up.
 * Mail text can be adjusted in the config file.
 

@@ -16,7 +16,8 @@
 #    You should have received a copy of the GNU General Public License        #
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.    #
 # ----------------------------------------------------------------------------#
-import sys, datetime, logging, argparse
+import sys, datetime, logging, argparse, subprocess
+from urllib import quote
 from bimibase import BimiBase
 from bimiconfig import BimiConfig
 
@@ -75,7 +76,7 @@ class BiMiTool:
                    'add_drink': self.popAddDrinkWindow,
                    'edit_drink': self.popEditDrinkWindow,
 
-                   'generate_mail': self.generateMail,
+                   'generate_mail': self.showSummaryMail,
                    #"preferences_activate": self.prefsPopup,
                    'main_window_destroyed': Gtk.main_quit,
                    'quit_activate' : Gtk.main_quit}
@@ -181,6 +182,7 @@ class BiMiTool:
         else:
             self.db.addAccount(acc_name, credit)
         self.updateAccountsView()
+        #TODO: reselect account after adding credit or select account after adding it
         self.account_window.destroy()
 
 
@@ -299,18 +301,11 @@ class BiMiTool:
 
     ## Generates mail text from mail file and database
     #
-    #  size_request of scrolledwindow and textview doesn't work properly,
-    #  which results in a too small window. stupid gtk
-    def generateMail(self, widget):
-        if self.mail_window is None:
-            self.buildMailWindow()
-        else:
-            #TODO: Raise window
-            pass
-
-        mail_buffer = self.gui.get_object('mail_buffer')
-        mail_buffer.set_text('')
-        mail_string = BimiConfig.option('mail_text').split('\n')
+    #  \return \b String containing the body of the summary mail
+    #
+    def generateSummaryMail(self):
+        mail_string = BimiConfig.option('summary_mail_text').split('\n')
+        mail_body = ''
         for i,line in enumerate(mail_string):
             # substitute $kings in file with the kings information
             if line.find('$kings:') != -1:
@@ -332,9 +327,9 @@ class BiMiTool:
                         except StandardError as err:
                             self._logger.error("Line %s in file %s is not as expected! [err: %s]", str(i+1), BimiConfig.option('mail_path'), err)
                             return
-                        mail_buffer.insert_at_cursor(insert + '\n')
+                        mail_body += insert + '\n'
                 else:
-                    mail_buffer.insert_at_cursor( '{}The Rabble is delighted, there are no Kings and Queens!'.format(parts[0])+'\n' )
+                    mail_body += '{}The Rabble is delighted, there are no Kings and Queens!'.format(parts[0]) + '\n'
 
             # substitute $accInfos in file with the account informations
             elif line.find('$accInfos:') != -1:
@@ -359,12 +354,13 @@ class BiMiTool:
                         except StandardError as err:
                             self._logger.error("'$accInfos:' line in %s file is broken! [err: %s]", BimiConfig.option('mail_path'), err)
                             return
-                        mail_buffer.insert_at_cursor(insert + '\n')
+                        mail_body += insert + '\n'
                 else:
-                    mail_buffer.insert_at_cursor( '{}No one lives in BimiTool-land ;_;'.format(parts[0])+'\n' )
+                    mail_body += '{}No one lives in BimiTool-land ;_;'.format(parts[0]) + '\n'
             else:
-                mail_buffer.insert_at_cursor(line + '\n')
-        self.mail_window.show_all()
+                mail_body += line + '\n'
+
+        return mail_body
 
 
     def mailWindowDestroyed(self, widget, stuff=None):
@@ -430,6 +426,37 @@ class BiMiTool:
         self.drink_window.show()
 
 
+    ## Show summary mail in a gtk+ window or opens mail program
+    #
+    #  size_request of scrolledwindow and textview doesn't work properly,
+    #  which results in a too small window. stupid gtk
+    #
+    def showSummaryMail(self, widget):
+        # Open mail program if option was selected
+        mail_program = BimiConfig.option('mail_program')
+        mail_body = self.generateSummaryMail()
+        if mail_program is not None:
+            # Build mailto url, RFC 2368 says _no_ 8-bit characters but thunderbird supports utf-8
+            mailto_url = 'mailto:?'
+            mailto_url+= 'subject=' + quote(BimiConfig.option('summary_mail_subject').encode('utf-8')) + '&'
+            mailto_url+= 'body=' + quote(mail_body.encode('utf-8'))
+
+            if mail_program == 'icedove' or  mail_program == 'thunderbird':
+                process = subprocess.Popen([mail_program, "-compose", mailto_url], stdout=subprocess.PIPE)
+                if process.communicate()[0] != '':
+                    self._logger.debug("%s: %s", mail_program, process.communicate()[0])
+        # Display mail-window
+        else:
+            if self.mail_window is None:
+                self.buildMailWindow()
+            else:
+                #TODO: Raise window
+                pass
+            mail_buffer = self.gui.get_object('mail_buffer')
+            mail_buffer.set_text(BimiConfig.option('summary_mail_subject') + '\n\n' + mail_body)
+            self.mail_window.show_all()
+
+
     def tabSwitched(self, widget, tab_child, activated_tab):
         if activated_tab == 1:
             self.updateDrinksList()
@@ -439,10 +466,9 @@ class BiMiTool:
         if (event.button == 3):
             self.event_pos = (event.x,event.y)
             if widget.get_path_at_pos(event.x,event.y) is not None:
-                #diff = int(str(self.transactions_view.get_path_at_pos(event.x, event.y)[0]))
-                #diff -= len(self.transactions_list)
                 row_num = self.transactions_view.get_path_at_pos(event.x, event.y)[0]
-                if self.transactions_list[(row_num,0)][0] != -1: # Check if a transaction was clicked
+                # Check if a transaction was clicked
+                if self.transactions_list[(row_num,0)][0] != -1:
                     self.gui.get_object('transactions_menu_delete').set_sensitive(True)
                     self.transactions_context_menu.popup(None, None, None, None, event.button, event.time)
 

@@ -21,15 +21,32 @@
 #
 # The line containing $kings will be replaced with those account who consumed
 # the most of each drink. Customisation works the same way as $accInfos.
-#mail_text: |
-#    Guten Tag werter Flur,
-#    die aktuelle Abrechnung der Getränkeliste zeigt folgende Kontostände:
-#
-#        $accInfos:$name $balance
-#
-#    des Weiteren präsentiere ich für jede Getränkeklasse die Königinnen und Könige:
-#
-#        $kings:$drink-King ist $name mit $amount Flaschen
-#
-#    Auf ein munteres Weiterzechen!
-#    Euer BiMi
+summary_mail_subject: Getränkeabrechnung
+summary_mail_text: |
+    Guten Tag werter Flur,
+    die aktuelle Abrechnung der Getränkeliste zeigt folgende Kontostände:
+
+        $accInfos:$name $balance
+
+    des Weiteren präsentiere ich für jede Getränkeklasse die Königinnen und Könige:
+
+        $kings:$drink-King ist $name mit $amount Flaschen
+
+    Auf ein munteres Weiterzechen!
+    Euer BiMi
+
+# Instead of displaying the mail text in the gui, a mail program
+# can be launched with the mail data as parameter. Supported
+# programs are thunderbird and icedove.
+#mail_program: icedove
+
+# If credits have been added to an account a mail can be sent to
+# confirm the transaction. The mail_program option must be
+# activated to use this feature.
+credit_mail_subject: Getränkekonto +$amount
+credit_mail_text: |
+    Hoi,
+    hiermit ist bestätigt dass $amount auf dein Getränkekonto eingezahlt wurde.
+
+    Auf ein munteres Weiterzechen!
+    Dein BiMi
